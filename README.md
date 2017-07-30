@@ -1,7 +1,30 @@
 # CarND-Controls-MPC
 Self-Driving Car Engineer Nanodegree Program
 
----
+## Questions
+#### N and dt
+Shorter `Ndt` values resulted in instabilities and increased lateny due to a larger non-linear MPC being solved and larger values lead to smoother control. I chose N=12 and dt=0.05 which resulted in a smooth drive for up to 70mph speed.
+
+#### latency handling
+I decided to compute the optimal trajectory starting from the time after latency period. This is implemented in `MPC::Solve`:
+```
+for (int i = delta_start; i < delta_start + latency_ind; i++) {
+    vars_lowerbound[i] = delta_prev;
+    vars_upperbound[i] = delta_prev;
+  }
+  
+for (int i = a_start; i < a_start+latency_ind; i++) {
+    vars_lowerbound[i] = a_prev;
+    vars_upperbound[i] = a_prev;
+  }
+```
+
+#### MPC preprocessing
+Origin is first shifted to the current position of the vehicle and then a 2D rotation to align x-axis with heading direction so the waypoitns are in the vehicle frame. 3rd order polynomial is then fitted to the waypoints. Here's the used transformation:
+```
+ X' =   cos(psi) * (ptsx[i] - x) + sin(psi) * (ptsy[i] - y);
+ Y' =  -sin(psi) * (ptsx[i] - x) + cos(psi) * (ptsy[i] - y);  
+```
 
 ## Dependencies
 
