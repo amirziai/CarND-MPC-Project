@@ -2,29 +2,32 @@
 Self-Driving Car Engineer Nanodegree Program
 
 ## Questions
+#### Model
+Model uses state and actuations from previous time to calculate current state:
+```
+x_t+1 = x_t + v_t * cos(psi_t) * dt
+y_t+1 = y_t + v_t * sin(psi_t) * dt
+psi_t+1 = psi_t + v_t / L_f * sigma_t * dt
+v_t+1 = v_t + a_t * dt
+cte_t+1 = f(x_t) - y_t + (v_t * sin(epsi_t) * dt)
+epsi_t+1 = psi_t - psides_t + (v_t/L_f*sigma_t*dt)
+
+where
+psi     orientiation angle
+epsi    psi error
+delta   steering angle
+```
+
+
 #### N and dt
-Shorter `Ndt` values resulted in instabilities and increased lateny due to a larger non-linear MPC being solved and larger values lead to smoother control. I chose N=12 and dt=0.05 which resulted in a smooth drive for up to 70mph speed.
+Shorter `N*dt` values resulted in instabilities and increased latency due to a larger non-linear MPC being solved and larger values lead to smoother control. I chose N=10 and dt=0.1 which resulted in a smooth drive for up to 70mph speed.
 
 #### latency handling
-I decided to compute the optimal trajectory starting from the time after latency period. This is implemented in `MPC::Solve`:
-```
-for (int i = delta_start; i < delta_start + latency_ind; i++) {
-    vars_lowerbound[i] = delta_prev;
-    vars_upperbound[i] = delta_prev;
-  }
-  
-for (int i = a_start; i < a_start+latency_ind; i++) {
-    vars_lowerbound[i] = a_prev;
-    vars_upperbound[i] = a_prev;
-  }
-```
+* Added an extra penalty on delta and velocity which empirically helped with more controlled steering (see line 39 of `MPC.cpp`)
+* Used actuations from the previous step (see lines )
 
-#### MPC preprocessing
-Origin is first shifted to the current position of the vehicle and then a 2D rotation to align x-axis with heading direction so the waypoitns are in the vehicle frame. 3rd order polynomial is then fitted to the waypoints. Here's the used transformation:
-```
- X' =   cos(psi) * (ptsx[i] - x) + sin(psi) * (ptsy[i] - y);
- Y' =  -sin(psi) * (ptsx[i] - x) + cos(psi) * (ptsy[i] - y);  
-```
+#### MPC preprocessing and polynomial fitting
+Waypoints are transformed to the vehicle heading which simplifies the polynomial fitting. 
 
 ## Dependencies
 
